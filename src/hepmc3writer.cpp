@@ -55,6 +55,7 @@ int hepMC3Writer::writeEvent(const eXEvent &event, int eventnumber)
 
   /** Make HepMC3 Event and Vertex ... Currently only two Vertices per Event, the beam and gamma  **/ 
   HepMC3::GenEvent hepmc3_evt(HepMC3::Units::GEV , HepMC3::Units::MM);
+  hepmc3_evt.set_event_number( eventnumber );
   HepMC3::GenVertexPtr hepmc3_beam_vertex_to_write = std::make_shared<HepMC3::GenVertex>(FourVector(0,0,0,0));  
   HepMC3::GenVertexPtr hepmc3_gamma_vertex_to_write = std::make_shared<HepMC3::GenVertex>(FourVector(0,0,0,0));
 

@@ -1150,9 +1150,11 @@ void Gammaavectormeson::pickwEgamq2(double &W, double &cmsEgamma, double &target
 	  gamma_pz = temp_pz*cosh(beam_y) - targetEgamma*sinh(beam_y); 
 	  cmsEgamma = targetEgamma*cosh(beam_y) - temp_pz*sinh(beam_y);
 	  // Simple checkl, should not be needed but used for safety
-	  if( cmsEgamma < _cmsMinPhotonEnergy || 2.*targetEgamma/(Q2+W*W) < _targetRadius){ //This cut is roughly RA = 0.8 fm the radius of proton and 1 eV^{-1} = 1.97 x 10 ^{-7} m
-	      continue;
-	  }
+    // --Modified by Yuanjing Ji Jul28, 2021-- add cut on production threshold of photon energy---
+    double targetEgamma_min = (W*W+2*W*starlightConstants::protonMass)/2./starlightConstants::protonMass;
+    if (targetEgamma<targetEgamma_min || cmsEgamma < _cmsMinPhotonEnergy || 2.*targetEgamma/(Q2+W*W) < _targetRadius)
+    { continue;}
+
 	  xtest = _randy.Rndom();
 	  // Test against photonuclear cross section gamma+X --> VM+X
 	  if( _f_WYarray[IGamma][IQ2] < xtest ){
@@ -1191,10 +1193,32 @@ eXEvent Gammaavectormeson::e_produceEvent()
 		   Q2, gamma_pz, gamma_pt, //photon infor in CMS frame
 		   e_E, e_theta);	 //electron info in target frame  
 	  //
-	  momenta(comenergy,cmsEgamma, Q2, gamma_pz, gamma_pt, //input
+    //--Modified by Yuanjing Ji Oct 8, 2021--
+    //--add tmin/tmax cut for ep collisions, for near threshold production--
+   if (_bbs.beam1().A()==0 &&  _bbs.beam2().A()==1 ) {
+      double m_p = starlightConstants::protonMass;
+      double W_ = sqrt(m_p*m_p+2*m_p*targetEgamma);
+      double mass = comenergy; //Mass of vector meson
+      double pg=(W_*W_-m_p*m_p)/2./W_;  // photon mom in gammap c.m. frame
+      double pj=sqrt((W_*W_-(m_p+mass)*(m_p+mass))*(W_*W_-(m_p-mass)*(m_p-mass)))/2./W_; // VM mom in gammap c.m. frame
+      double t_min = mass*mass - 2*pg*(sqrt(pj*pj+mass*mass) - pj); // -1*(|t|_min)
+      double t_max = mass*mass - 2*pg*(sqrt(pj*pj+mass*mass) + pj);// -1*(|t|_max)
+      double ttest=999;
+      while (ttest<t_max || ttest > t_min){
+        momenta(comenergy,cmsEgamma, Q2, gamma_pz, gamma_pt, //input
+          rapidity, E, momx, momy, momz, //VM
+          t_px, t_py, t_pz, t_E, //target
+          e_phi,tcheck); //electron
+        ttest = t_E*t_E-(t_px*t_px+t_py*t_py+t_pz*t_pz);
+      }
+       // cout<<" Mv"<< comenergy<<" Egamma:"<<targetEgamma<<" W:"<<W_ <<" ttest:"<< ttest << " tmin:"<< t_min<< " tmax:"<<t_max << endl;
+   }
+   else {
+  	  momenta(comenergy,cmsEgamma, Q2, gamma_pz, gamma_pt, //input
 		  rapidity, E, momx, momy, momz, //VM
 		  t_px, t_py, t_pz, t_E, //target
 		  e_phi,tcheck); //electron
+   }
 	  //
 	  // inelasticity: used for angular distributions
 	  double col_y = 1. - (e_E/_eEnergy)*std::pow(std::cos(e_theta/2.),2.);

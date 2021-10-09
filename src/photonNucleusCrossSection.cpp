@@ -376,6 +376,7 @@ photonNucleusCrossSection::e_getcsgA(const double Egamma, double Q2,
 	if ((_bbs.beam1().A() <= 1) && (_bbs.beam2().A() <= 1)){
 	   // proton-proton, no scaling needed
 	   csgA = sigmagp(Wgp);
+     
 	} else {
 	   // coherent AA interactions
 	   // Calculate V.M.+proton cross section
@@ -922,6 +923,7 @@ photonNucleusCrossSection::sigmagp(const double Wgp)
 			sigmagp_r=(1.0-((_channelMass+protonMass)*(_channelMass+protonMass))/(Wgp*Wgp));
 			sigmagp_r*=sigmagp_r;
 			sigmagp_r*=1.E-4*0.00406*exp(0.65*log(Wgp));
+      sigmagp_r+=JpsiCorrect( Wgp, _channelMass);
 			// sigmagp_r=1.E-4*0.0015*exp(0.80*log(Wgp));
 			break;
 		case JPSI2S:
@@ -1220,3 +1222,17 @@ photonNucleusCrossSection::breitWigner(const double W,
   
 	return nrbw_r;    
 }
+double photonNucleusCrossSection::JpsiCorrect(const double W_, const double mass)
+{
+   double m_p = protonMass;
+   double pg=(W_*W_-m_p*m_p)/2./W_;  // photon mom in gammap c.m. frame
+   if (W_<(m_p+mass)) return 0;
+   double pj=sqrt((W_*W_-(m_p+mass)*(m_p+mass))*(W_*W_-(m_p-mass)*(m_p-mass)))/2./W_; // psi mom in gammap c.m. frame
+   double t_min = mass*mass - 2*pg*(sqrt(pj*pj+mass*mass) - pj); // -1*(|t|_min)
+   double t_max = mass*mass - 2*pg*(sqrt(pj*pj+mass*mass) + pj);
+
+   // return 1e-7*1.46*(exp(1.67*t_min)-exp(1.67*t_max)); //threegluon
+   double par[2]; par[0] = 1e-7*51;  par[1] = 1.41;
+   return 0.25*par[0]*( 1/(t_min-par[1])/(t_min-par[1])/(t_min-par[1])/(t_min-par[1]) -  1/(t_max-par[1])/(t_max-par[1])/(t_max-par[1])/(t_max-par[1]));; //twist-4
+}
+

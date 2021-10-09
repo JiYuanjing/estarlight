@@ -77,9 +77,10 @@ public:
 	double g(double const Egamma, double const Q2);
 	// ---
 	double sigmagp(const double Wgp);
+  double JpsiCorrect(const double W_, const double mass);
 	double sigma_A(const double sig_N, 
                        const int beam);
-        double sigma_N(const double Wgp);
+  double sigma_N(const double Wgp);
 	double breitWigner(const double W,
 	                   const double C);
 	double nepoint(const double Egamma,

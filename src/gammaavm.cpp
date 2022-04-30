@@ -683,7 +683,7 @@ void Gammaavectormeson::momenta(double W,double Egam,double Q2, double gamma_pz,
 	e_phi = starlightConstants::pi+phi1;
 	// Pomeron pz is != than its energy in eSTARlight, in order to conserve energy/momentum of scattered
      //Pom_pz = 0.5*(W*W-Q2)/(Egam + gamma_pz);
-	Epom = 0.5*(W*W-Q2)/(Egam + target_E);
+	Epom = 0.5*(W*W+Q2)/(Egam + target_E);
 
     L688vm:
 	while( e_phi > 2.*starlightConstants::pi ) e_phi-= 2.*starlightConstants::pi;
@@ -1168,13 +1168,15 @@ void Gammaavectormeson::pickwEgamq2(double &W, double &cmsEgamma, double &target
 	  }
 	  // -- Generate electron and photon in Target frame
 	  E_prime = _eEnergy - targetEgamma;
-	  //double cos_theta_e = 1. - Q2/(2.*_eEnergy*E_prime);
-	  //theta_e = acos(cos_theta_e);
-	  theta_e = sqrt(Q2/(_eEnergy*E_prime));//updated from above code because small angles were taken to exactly 0 before
+	  if(Q2>1E-6){
+	  	double cos_theta_e = 1. - Q2/(2.*_eEnergy*E_prime);
+	    theta_e = acos(cos_theta_e);
+	  }
+	  else {theta_e = sqrt(Q2/(_eEnergy*E_prime));}//updated using small angle approximation to avoid rounding to 0
 	  double beam_y = acosh(_beam2LorentzGamma)+_rap_CM;	
 	  gamma_pt = E_prime*sin(theta_e);
 	  
-	  double pz_squared = targetEgamma*targetEgamma - Q2 - gamma_pt*gamma_pt;
+	  double pz_squared = targetEgamma*targetEgamma + Q2 - gamma_pt*gamma_pt;
 	  if( pz_squared < 0 )
 	    continue;
 	  double temp_pz = sqrt(pz_squared);
